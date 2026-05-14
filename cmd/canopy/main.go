@@ -58,9 +58,10 @@ func init() {
 	// Persistent flags available to all subcommands.
 	rootCmd.PersistentFlags().StringVar(&configPath, "config", "", "path to config file (default: $HOME/.canopy/config.toml)")
 	rootCmd.PersistentFlags().StringVar(&dataDir, "data-dir", "", "path to data directory (default: $HOME/.canopy)")
-	// Using "info" as the default log level to reduce noise during normal operation.
-	// Switch to "debug" locally when troubleshooting.
-	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "info", "log level: debug, info, warn, error")
+	// Using "debug" as the default log level for my personal learning/dev setup so I can
+	// see detailed internals without having to remember to pass --log-level=debug each time.
+	// NOTE: switch back to "info" before running in any production-like environment.
+	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "debug", "log level: debug, info, warn, error")
 
 	rootCmd.AddCommand(startCmd)
 	rootCmd.AddCommand(versionCmd)
