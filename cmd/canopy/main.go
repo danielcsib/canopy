@@ -92,8 +92,11 @@ func runStart(cmd *cobra.Command, args []string) error {
 	log.Info("node started successfully")
 
 	// Wait for OS interrupt or termination signal.
+	// Also handle SIGHUP so the process isn't accidentally killed by a terminal
+	// hangup when running interactively without a process manager (common when
+	// SSHing into a dev machine and the connection drops).
 	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	<-quit
 
 	log.Info("shutdown signal received, stopping node...")
