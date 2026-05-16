@@ -95,16 +95,25 @@ func runStart(cmd *cobra.Command, args []string) error {
 	// Also handle SIGHUP so the process isn't accidentally killed by a terminal
 	// hangup when running interactively without a process manager (common when
 	// SSHing into a dev machine and the connection drops).
+	// SIGUSR1 is also caught here so I can send `kill -USR1 <pid>` to log a
+	// quick status reminder to stdout without actually stopping the node.
 	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
-	<-quit
-
-	log.Info("shutdown signal received, stopping node...")
-	if err := n.Stop(); err != nil {
-		log.Error("error during node shutdown", "err", err)
-		return err
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGUSR1)
+	for {
+		sig := <-quit
+		if sig == syscall.SIGUSR1 {
+			log.Info("received SIGUSR1 — node is still running", "version", Version, "commit", Commit)
+			continue
+		}
+		break
 	}
 
-	log.Info("node stopped gracefully")
+	log.Info("shutdown signal received, stopping node")
+
+	if err := n.Stop(); err != nil {
+		return fmt.Errorf("error during node shutdown: %w", err)
+	}
+
+	log.Info("node stopped cleanly")
 	return nil
 }
